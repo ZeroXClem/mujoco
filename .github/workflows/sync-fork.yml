@@ -1,0 +1,31 @@
+name: Sync Fork
+
+on:
+  schedule:
+    - cron: '*/30 * * * *' # every 30 minutes
+  workflow_dispatch: # on button click
+
+# fork-sync opens and merges a PR (upstream -> this fork), so the token needs
+# write access to contents and pull requests.
+permissions:
+  contents: write
+  pull-requests: write
+
+# Never let two syncs overlap.
+concurrency:
+  group: sync-fork
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Sync fork with upstream
+        uses: tgymnich/fork-sync@v2.0.10
+        with:
+          owner: google-deepmind # upstream owner
+          repo: mujoco # upstream repo
+          head: main # upstream branch to pull from
+          base: main # branch in this fork to keep updated
+          merge_method: merge
+          auto_merge: true
