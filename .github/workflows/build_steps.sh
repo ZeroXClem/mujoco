@@ -39,13 +39,18 @@ generate_matrix() {
     echo "Generating build matrix for event '${GITHUB_EVENT_NAME}'..."
     local file=".github/workflows/build_matrix.json"
     local matrix
+    local bazel_matrix
     if [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
         matrix="$(jq -c '{include: [.include[] | select(.tier == "core") | del(.tier)]}' "${file}")"
+        bazel_matrix="$(jq -c '{include: [.bazel[] | select(.tier == "core") | del(.tier)]}' "${file}")"
     else
         matrix="$(jq -c '{include: [.include[] | del(.tier)]}' "${file}")"
+        bazel_matrix="$(jq -c '{include: [.bazel[] | del(.tier)]}' "${file}")"
     fi
     echo "matrix=${matrix}" >> "${GITHUB_OUTPUT}"
+    echo "bazel_matrix=${bazel_matrix}" >> "${GITHUB_OUTPUT}"
     echo "${matrix}" | jq .
+    echo "${bazel_matrix}" | jq .
 }
 
 
@@ -839,9 +844,9 @@ build_simulate_app() {
 
 
 # The Python Studio viewer: platform libraries, SDK, then the Studio Python
-# modules (ux, sim, renderer, window, dear_imgui, implot, headless_ui,
-# state_payload, _render_filament) built into a wheel and installed. The
-# browser client and the C++ app are not built.
+# modules (ux, sim, window, dear_imgui, implot, headless_ui, state_payload,
+# _render_filament) built into a wheel and installed. The browser client and
+# the C++ app are not built.
 build_studio_python() {
     echo "Building the Studio platform for Python..."
     build_studio_platform_libs
